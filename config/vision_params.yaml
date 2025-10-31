@@ -1,0 +1,52 @@
+# Computer Vision Parameters
+
+# Object Detection
+detection:
+  model_type: "yolov5"
+  model_size: "yolov5s"  # yolov5s, yolov5m, yolov5l, yolov5x
+  confidence_threshold: 0.5
+  nms_threshold: 0.4
+  target_classes: ["tank", "truck", "car"]
+  input_size: [640, 480]
+  use_gpu: true
+  
+  # Fallback color-based detection
+  fallback_enabled: true
+  color_threshold: 80
+  min_area: 500
+  max_area: 50000
+  aspect_ratio_min: 0.5
+  aspect_ratio_max: 3.0
+
+# Object Tracking
+tracking:
+  algorithm: "deepsort"
+  max_iou_distance: 0.7
+  max_feature_distance: 0.3
+  min_confidence: 0.5
+  
+  # Track management
+  min_frames_for_confirmation: 3
+  max_frames_lost: 30
+  feature_history_length: 30
+  
+  # Kalman filter parameters
+  process_noise: 0.01
+  measurement_noise: 1.0
+  
+# Re-identification
+reidentification:
+  enabled: true
+  feature_type: "color_histogram"  # color_histogram, deep_features
+  similarity_threshold: 0.3
+  max_reidentification_distance: 10.0  # meters
+  reidentification_window: 10  # frames
+
+# Camera parameters
+camera:
+  width: 640
+  height: 480
+  fps: 30
+  fov: 60  # degrees
+  downward_angle: 90  # degrees (0 = forward, 90 = straight down)
+

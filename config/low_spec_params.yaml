@@ -1,0 +1,223 @@
+# Low-Spec Hardware Configuration
+# Optimized for systems with limited GPU/RAM
+# Target: 128 MB VRAM, 8 GB RAM, CPU-only processing
+
+# ============================================
+# GAZEBO OPTIMIZATION
+# ============================================
+
+gazebo:
+  # Use headless mode (no GUI) to save VRAM and RAM
+  headless: true
+  
+  # Reduce physics update rate (default: 1000 Hz)
+  # Lower = less CPU usage, but less accurate physics
+  physics_update_rate: 100  # 10x slower, saves CPU
+  
+  # Reduce real-time factor target
+  # 0.5 = simulation runs at half real-time speed
+  real_time_factor: 0.5
+  
+  # Disable shadows (saves GPU/CPU)
+  shadows: false
+  
+  # Reduce max step size for stability
+  max_step_size: 0.01
+  
+  # Use simple collision shapes
+  use_simple_collisions: true
+
+# ============================================
+# CAMERA OPTIMIZATION
+# ============================================
+
+camera:
+  # Reduce resolution significantly
+  # Default: 640x480, Optimized: 320x240
+  width: 320
+  height: 240
+  
+  # Reduce frame rate dramatically
+  # Default: 30 FPS, Optimized: 5 FPS
+  update_rate: 5.0  # 5 FPS instead of 30 FPS
+  
+  # Reduce field of view slightly
+  horizontal_fov: 1.047  # 60 degrees (default)
+  
+  # Disable camera visualization
+  visualize: false
+
+# ============================================
+# VISION OPTIMIZATION
+# ============================================
+
+vision:
+  # Use lighter YOLO model
+  # Options: yolov5n (nano), yolov5s (small), yolov5m (medium)
+  model_size: "yolov5n"  # Smallest, fastest model
+  
+  # Process every Nth frame only
+  # Default: 1 (every frame), Optimized: 3 (every 3rd frame)
+  frame_skip: 3  # Process only 1 out of 3 frames
+  
+  # Reduce input image size for YOLO
+  # Default: 640, Optimized: 320
+  input_size: 320  # Smaller = faster inference
+  
+  # Increase confidence threshold to reduce false positives
+  confidence_threshold: 0.6  # Higher = fewer detections to process
+  
+  # Reduce NMS IoU threshold
+  nms_iou_threshold: 0.5
+  
+  # Disable GPU (force CPU mode)
+  use_gpu: false
+  device: "cpu"
+  
+  # Reduce number of threads for inference
+  num_threads: 2  # Limit CPU usage
+  
+  # Disable visualization overlays
+  visualize_detections: false
+  publish_debug_images: false
+
+# ============================================
+# TRACKING OPTIMIZATION
+# ============================================
+
+tracking:
+  # Reduce max age (how long to keep lost tracks)
+  # Default: 30 frames, Optimized: 15 frames
+  max_age: 15
+  
+  # Increase min hits (more conservative tracking)
+  # Default: 3, Optimized: 2
+  min_hits: 2
+  
+  # Simplify feature extraction
+  # Use smaller histogram bins
+  histogram_bins: 16  # Default: 32, Optimized: 16
+  
+  # Reduce feature dimension
+  feature_dim: 48  # Default: 96, Optimized: 48
+  
+  # Disable deep features (use only color histograms)
+  use_deep_features: false
+  
+  # Increase IoU threshold (more conservative matching)
+  max_iou_distance: 0.6
+  
+  # Reduce feature distance threshold
+  max_feature_distance: 0.4
+
+# ============================================
+# FLIGHT CONTROL OPTIMIZATION
+# ============================================
+
+flight:
+  # Reduce control frequency
+  # Default: 20 Hz, Optimized: 10 Hz
+  control_rate: 10.0
+  
+  # Slower movement speeds (easier for slow vision processing)
+  takeoff_speed: 0.5      # Default: 1.0
+  search_speed: 1.0       # Default: 2.0
+  approach_speed: 0.8     # Default: 1.5
+  descent_rate: 0.3       # Default: 0.5
+  
+  # Larger tolerances (less precise, but easier to achieve)
+  altitude_tolerance: 0.5      # Default: 0.2
+  position_tolerance: 1.0      # Default: 0.5
+  centering_tolerance: 100     # Default: 50 pixels
+  
+  # Reduce PID gains (slower, more stable response)
+  altitude_kp: 0.5        # Default: 1.0
+  position_kp: 0.3        # Default: 0.5
+  
+  # Simpler search pattern
+  search_pattern: "simple_grid"  # Instead of spiral
+  search_step_size: 5.0   # Larger steps
+
+# ============================================
+# ENGAGEMENT OPTIMIZATION
+# ============================================
+
+engagement:
+  # Relaxed engagement conditions
+  engagement_altitude: 3.0      # Default: 2.0 (higher = easier)
+  altitude_tolerance: 1.0       # Default: 0.5
+  centering_tolerance: 100      # Default: 50 pixels
+  min_lock_time: 1.5           # Default: 2.0 seconds
+  
+  # Reduce verification frequency
+  check_rate: 5.0              # Default: 10.0 Hz
+
+# ============================================
+# MISSION OPTIMIZATION
+# ============================================
+
+mission:
+  # Reduce status publishing rate
+  status_rate: 2.0             # Default: 5.0 Hz
+  
+  # Disable detailed logging
+  verbose_logging: false
+  
+  # Reduce timeout values
+  phase_timeout: 120.0         # Default: 180.0 seconds
+  
+  # Simplify mission phases
+  skip_reidentification_test: true
+
+# ============================================
+# ROS OPTIMIZATION
+# ============================================
+
+ros:
+  # Reduce queue sizes to save memory
+  queue_size: 1               # Default: 10
+  
+  # Disable rosbag recording by default
+  record_bag: false
+  
+  # Reduce TF buffer size
+  tf_cache_time: 5.0          # Default: 10.0 seconds
+  
+  # Disable unnecessary diagnostics
+  publish_diagnostics: false
+
+# ============================================
+# MEMORY OPTIMIZATION
+# ============================================
+
+memory:
+  # Limit image buffer size
+  max_image_buffer: 1         # Keep only latest image
+  
+  # Limit detection history
+  max_detection_history: 10   # Default: 50
+  
+  # Limit track history
+  max_track_history: 5        # Default: 30
+  
+  # Clear old data aggressively
+  cleanup_interval: 5.0       # Seconds
+
+# ============================================
+# PERFORMANCE MONITORING
+# ============================================
+
+performance:
+  # Enable performance monitoring
+  monitor_enabled: true
+  
+  # Log performance metrics
+  log_fps: true
+  log_memory: true
+  log_cpu: true
+  
+  # Warning thresholds
+  min_fps_warning: 2.0
+  max_memory_warning: 6000    # MB (leave 2 GB for system)
+  max_cpu_warning: 90         # Percent
+

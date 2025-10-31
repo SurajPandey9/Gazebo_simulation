@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<launch>
+  
+  <!-- Arguments -->
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  
+  <!-- Launch Gazebo with battlefield world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find uav_simulation)/worlds/battlefield.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="verbose" value="true"/>
+  </include>
+
+  <!-- Spawn tank at a specific location -->
+  <node name="spawn_tank" pkg="gazebo_ros" type="spawn_model" 
+        args="-file $(find uav_simulation)/models/tank/model.sdf 
+              -sdf 
+              -model tank 
+              -x 15 
+              -y 10 
+              -z 0.3
+              -Y 0.5"
+        output="screen"/>
+
+  <!-- Spawn UAV with hector quadrotor -->
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+    <arg name="name" value="uav"/>
+    <arg name="model" value="$(find hector_quadrotor_description)/urdf/quadrotor_with_downward_cam.gazebo.xacro"/>
+    <arg name="x" value="0.0"/>
+    <arg name="y" value="0.0"/>
+    <arg name="z" value="0.3"/>
+  </include>
+
+  <!-- Computer Vision Pipeline -->
+  <node name="object_detector" pkg="uav_vision" type="object_detector.py" output="screen">
+    <param name="confidence_threshold" value="0.5"/>
+    <param name="nms_threshold" value="0.4"/>
+    <param name="model_size" value="yolov5s"/>
+  </node>
+
+  <node name="object_tracker" pkg="uav_vision" type="object_tracker.py" output="screen">
+    <param name="max_iou_distance" value="0.7"/>
+    <param name="max_feature_distance" value="0.3"/>
+    <param name="min_confidence" value="0.5"/>
+  </node>
+
+  <!-- Flight Controller -->
+  <node name="flight_controller" pkg="uav_control" type="flight_controller.py" output="screen">
+    <param name="takeoff_altitude" value="10.0"/>
+    <param name="search_altitude" value="10.0"/>
+    <param name="search_speed" value="2.0"/>
+    <param name="approach_speed" value="1.5"/>
+    <param name="engagement_altitude" value="2.0"/>
+    <param name="position_tolerance" value="0.5"/>
+  </node>
+
+  <!-- RViz for visualization (optional) -->
+  <node if="$(arg gui)" name="rviz" pkg="rviz" type="rviz" 
+        args="-d $(find uav_simulation)/config/mission.rviz" 
+        required="false"/>
+
+</launch>
+

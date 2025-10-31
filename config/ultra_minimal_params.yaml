@@ -1,0 +1,144 @@
+# Ultra-Minimal Configuration
+# EMERGENCY FALLBACK for extremely limited hardware
+# Use only if low_spec_params.yaml doesn't work
+
+# ============================================
+# GAZEBO - ABSOLUTE MINIMUM
+# ============================================
+
+gazebo:
+  headless: true
+  physics_update_rate: 50  # Very slow physics
+  real_time_factor: 0.3    # Accept 0.3x real-time
+  shadows: false
+  use_simple_collisions: true
+  max_step_size: 0.02
+
+# ============================================
+# CAMERA - TINY RESOLUTION
+# ============================================
+
+camera:
+  width: 160   # Extremely small
+  height: 120
+  update_rate: 2.0  # Only 2 FPS
+  visualize: false
+
+# ============================================
+# VISION - COLOR DETECTION ONLY (NO YOLO)
+# ============================================
+
+vision:
+  # Disable YOLO completely, use color detection
+  use_yolo: false
+  use_color_detection: true
+  
+  # Color detection parameters (HSV for tank)
+  color_lower: [20, 50, 50]    # Brownish/tan lower bound
+  color_upper: [40, 255, 255]  # Brownish/tan upper bound
+  
+  # Minimal processing
+  frame_skip: 1  # Process every frame (already slow at 2 FPS)
+  visualize_detections: false
+  publish_debug_images: false
+  
+  # If YOLO is enabled (fallback)
+  model_size: "yolov5n"
+  input_size: 160
+  confidence_threshold: 0.7
+  device: "cpu"
+  num_threads: 1
+
+# ============================================
+# TRACKING - SIMPLIFIED
+# ============================================
+
+tracking:
+  max_age: 10
+  min_hits: 1  # Very permissive
+  histogram_bins: 8  # Minimal
+  feature_dim: 24    # Minimal
+  use_deep_features: false
+  max_iou_distance: 0.7
+  max_feature_distance: 0.5
+
+# ============================================
+# FLIGHT - VERY SLOW AND SIMPLE
+# ============================================
+
+flight:
+  control_rate: 5.0  # Only 5 Hz
+  
+  # Very slow speeds
+  takeoff_speed: 0.3
+  search_speed: 0.5
+  approach_speed: 0.5
+  descent_rate: 0.2
+  
+  # Very large tolerances
+  altitude_tolerance: 1.0
+  position_tolerance: 2.0
+  centering_tolerance: 150  # Very permissive
+  
+  # Weak control
+  altitude_kp: 0.3
+  position_kp: 0.2
+  
+  # Simplest search
+  search_pattern: "simple_grid"
+  search_step_size: 8.0  # Large steps
+
+# ============================================
+# ENGAGEMENT - RELAXED
+# ============================================
+
+engagement:
+  engagement_altitude: 4.0  # Higher altitude
+  altitude_tolerance: 1.5
+  centering_tolerance: 150
+  min_lock_time: 1.0  # Shorter lock time
+  check_rate: 2.0     # Slow checking
+
+# ============================================
+# MISSION - SIMPLIFIED
+# ============================================
+
+mission:
+  status_rate: 1.0  # Only 1 Hz
+  verbose_logging: true  # Keep logging for debugging
+  phase_timeout: 300.0   # Longer timeout
+  skip_reidentification_test: true
+
+# ============================================
+# ROS - MINIMAL OVERHEAD
+# ============================================
+
+ros:
+  queue_size: 1
+  record_bag: false
+  tf_cache_time: 3.0
+  publish_diagnostics: false
+
+# ============================================
+# MEMORY - AGGRESSIVE LIMITS
+# ============================================
+
+memory:
+  max_image_buffer: 1
+  max_detection_history: 5
+  max_track_history: 3
+  cleanup_interval: 3.0
+
+# ============================================
+# PERFORMANCE
+# ============================================
+
+performance:
+  monitor_enabled: true
+  log_fps: true
+  log_memory: true
+  log_cpu: true
+  min_fps_warning: 1.0
+  max_memory_warning: 7000
+  max_cpu_warning: 95
+

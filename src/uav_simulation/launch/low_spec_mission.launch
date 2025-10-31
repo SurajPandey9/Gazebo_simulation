@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<!--
+  Low-Spec Mission Launch File
+  Optimized for limited hardware: 128 MB VRAM, 8 GB RAM, CPU-only
+  
+  Usage:
+    roslaunch uav_simulation low_spec_mission.launch
+    
+  Features:
+    - Headless Gazebo (no GUI)
+    - Reduced camera resolution (320x240)
+    - Low frame rate (5 FPS)
+    - YOLOv5 nano model
+    - CPU-only processing
+    - Minimal memory usage
+-->
+
+<launch>
+  <!-- ============================================ -->
+  <!-- ARGUMENTS -->
+  <!-- ============================================ -->
+  
+  <!-- Gazebo settings -->
+  <arg name="gui" default="false" doc="Show Gazebo GUI (set false for headless)"/>
+  <arg name="paused" default="false" doc="Start simulation paused"/>
+  <arg name="verbose" default="true" doc="Verbose output"/>
+  <arg name="debug" default="false" doc="Debug mode"/>
+  
+  <!-- World settings -->
+  <arg name="world_name" default="$(find uav_simulation)/worlds/battlefield.world"/>
+  
+  <!-- UAV spawn position -->
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.5"/>
+  <arg name="yaw" default="0.0"/>
+  
+  <!-- Tank spawn position -->
+  <arg name="tank_x" default="25.0"/>
+  <arg name="tank_y" default="0.0"/>
+  <arg name="tank_z" default="0.0"/>
+  
+  <!-- Configuration -->
+  <arg name="config_file" default="$(find uav_simulation)/../../../config/low_spec_params.yaml"/>
+  
+  <!-- ============================================ -->
+  <!-- ENVIRONMENT VARIABLES -->
+  <!-- ============================================ -->
+  
+  <!-- Force software rendering (no GPU) -->
+  <env name="LIBGL_ALWAYS_SOFTWARE" value="1"/>
+  <env name="LIBGL_ALWAYS_INDIRECT" value="0"/>
+  
+  <!-- Reduce Gazebo resource usage -->
+  <env name="GAZEBO_RESOURCE_PATH" value="$(find uav_simulation)/models:$(optenv GAZEBO_RESOURCE_PATH)"/>
+  <env name="GAZEBO_MODEL_PATH" value="$(find uav_simulation)/models:$(optenv GAZEBO_MODEL_PATH)"/>
+  
+  <!-- ============================================ -->
+  <!-- GAZEBO SERVER (Headless) -->
+  <!-- ============================================ -->
+  
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="verbose" value="$(arg verbose)"/>
+    <arg name="debug" value="$(arg debug)"/>
+    
+    <!-- Performance optimizations -->
+    <arg name="physics" value="ode"/>
+    <arg name="use_sim_time" value="true"/>
+    
+    <!-- Extra Gazebo args for low-spec -->
+    <arg name="extra_gazebo_args" value="--verbose"/>
+  </include>
+  
+  <!-- ============================================ -->
+  <!-- SPAWN UAV -->
+  <!-- ============================================ -->
+  
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+    <arg name="model" value="$(find uav_simulation)/models/uav_with_camera/model.sdf"/>
+    <arg name="x" value="$(arg x)"/>
+    <arg name="y" value="$(arg y)"/>
+    <arg name="z" value="$(arg z)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
+  </include>
+  
+  <!-- ============================================ -->
+  <!-- SPAWN TANK -->
+  <!-- ============================================ -->
+  
+  <node name="spawn_tank" pkg="gazebo_ros" type="spawn_model"
+        args="-sdf -file $(find uav_simulation)/models/tank/model.sdf
+              -model tank
+              -x $(arg tank_x)
+              -y $(arg tank_y)
+              -z $(arg tank_z)"
+        output="screen"/>
+  
+  <!-- ============================================ -->
+  <!-- CAMERA RELAY (Reduced Resolution) -->
+  <!-- ============================================ -->
+  
+  <!-- Note: Camera resolution is set in model.sdf -->
+  <!-- For low-spec, manually edit model.sdf to 320x240 -->
+  
+  <node name="camera_relay" pkg="topic_tools" type="relay"
+        args="/camera/rgb/image_raw /uav/camera/image_raw"/>
+  
+  <!-- ============================================ -->
+  <!-- VISION NODES (Optimized) -->
+  <!-- ============================================ -->
+  
+  <!-- Object Detector (YOLOv5 Nano, CPU-only) -->
+  <node name="object_detector" pkg="uav_vision" type="object_detector.py"
+        output="screen">
+    <rosparam command="load" file="$(arg config_file)"/>
+    <param name="model_size" value="yolov5n"/>
+    <param name="device" value="cpu"/>
+    <param name="input_size" value="320"/>
+    <param name="confidence_threshold" value="0.6"/>
+    <param name="frame_skip" value="3"/>
+    <param name="visualize" value="false"/>
+  </node>
+  
+  <!-- Object Tracker (Simplified DeepSORT) -->
+  <node name="object_tracker" pkg="uav_vision" type="object_tracker.py"
+        output="screen">
+    <rosparam command="load" file="$(arg config_file)"/>
+    <param name="max_age" value="15"/>
+    <param name="min_hits" value="2"/>
+    <param name="histogram_bins" value="16"/>
+    <param name="use_deep_features" value="false"/>
+  </node>
+  
+  <!-- Vision Manager -->
+  <node name="vision_manager" pkg="uav_vision" type="vision_manager.py"
+        output="screen">
+    <rosparam command="load" file="$(arg config_file)"/>
+  </node>
+  
+  <!-- ============================================ -->
+  <!-- CONTROL NODES (Reduced Frequency) -->
+  <!-- ============================================ -->
+  
+  <!-- Flight Controller (10 Hz instead of 20 Hz) -->
+  <node name="flight_controller" pkg="uav_control" type="flight_controller.py"
+        output="screen">
+    <rosparam command="load" file="$(arg config_file)"/>
+    <param name="control_rate" value="10.0"/>
+    <param name="search_speed" value="1.0"/>
+    <param name="approach_speed" value="0.8"/>
+    <param name="descent_rate" value="0.3"/>
+  </node>
+  
+  <!-- Mission Manager -->
+  <node name="mission_manager" pkg="uav_control" type="mission_manager.py"
+        output="screen">
+    <rosparam command="load" file="$(arg config_file)"/>
+    <param name="verbose_logging" value="true"/>
+  </node>
+  
+  <!-- ============================================ -->
+  <!-- ENGAGEMENT NODE -->
+  <!-- ============================================ -->
+  
+  <node name="engagement_controller" pkg="uav_engagement" type="engagement_controller.py"
+        output="screen">
+    <rosparam command="load" file="$(arg config_file)"/>
+    <param name="engagement_altitude" value="3.0"/>
+    <param name="centering_tolerance" value="100"/>
+    <param name="min_lock_time" value="1.5"/>
+  </node>
+  
+  <!-- ============================================ -->
+  <!-- MONITORING (Optional) -->
+  <!-- ============================================ -->
+  
+  <!-- Performance Monitor -->
+  <node name="performance_monitor" pkg="uav_simulation" type="performance_monitor.py"
+        output="screen" if="$(arg verbose)">
+    <param name="monitor_rate" value="1.0"/>
+    <param name="log_to_file" value="true"/>
+    <param name="log_file" value="/workspace/performance.log"/>
+  </node>
+  
+  <!-- ============================================ -->
+  <!-- LOGGING -->
+  <!-- ============================================ -->
+  
+  <!-- Status display -->
+  <node name="status_display" pkg="rostopic" type="rostopic"
+        args="echo /mission/status"
+        output="screen" if="$(arg verbose)"/>
+  
+  <!-- ============================================ -->
+  <!-- INFORMATION -->
+  <!-- ============================================ -->
+  
+  <node name="info_display" pkg="rostopic" type="rostopic"
+        args="echo /uav/state -n 1"
+        output="screen" launch-prefix="bash -c 'sleep 5; $0 $@' "/>
+  
+</launch>
+

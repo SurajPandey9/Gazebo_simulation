@@ -1,0 +1,32 @@
+# Flight Control Parameters
+
+# Takeoff parameters
+takeoff_altitude: 10.0  # meters
+takeoff_speed: 1.0      # m/s
+
+# Search parameters
+search_altitude: 10.0   # meters
+search_speed: 2.0       # m/s
+search_pattern: "expanding_square"
+search_area_size: 100.0 # meters
+
+# Tracking parameters
+tracking_kp_xy: 0.002   # Proportional gain for visual servoing
+max_tracking_velocity: 1.0  # m/s
+
+# Approach parameters
+approach_speed: 1.5     # m/s
+descent_rate: 0.5       # m/s
+engagement_altitude: 2.0  # meters
+
+# Control parameters
+position_tolerance: 0.5  # meters
+control_frequency: 20    # Hz
+max_velocity: 3.0        # m/s
+max_acceleration: 2.0    # m/s^2
+
+# Safety parameters
+min_altitude: 0.5        # meters
+max_altitude: 50.0       # meters
+emergency_descent_rate: 2.0  # m/s
+

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Flight control system launch file -->
+  <!-- Starts flight controller and mission manager -->
+
+  <!-- Parameters -->
+  <arg name="enable_mission_manager" default="true" />
+
+  <!-- Load flight parameters -->
+  <rosparam command="load" file="$(find uav_simulation)/../../config/flight_params.yaml" />
+
+  <!-- Flight Controller Node -->
+  <node name="flight_controller" pkg="uav_control" type="flight_controller.py" output="screen">
+    <!-- Flight parameters -->
+    <param name="takeoff_altitude" value="10.0" />
+    <param name="search_altitude" value="10.0" />
+    <param name="engagement_altitude" value="2.0" />
+    <param name="search_speed" value="2.0" />
+    <param name="approach_speed" value="1.5" />
+    <param name="descent_rate" value="0.5" />
+    <param name="control_frequency" value="20.0" />
+    
+    <!-- Topics -->
+    <remap from="/ground_truth/state" to="/uav/ground_truth/pose" />
+    <remap from="/target_state" to="/vision/target_state" />
+    <remap from="/cmd_vel" to="/cmd_vel" />
+    <remap from="/uav_state" to="/uav/state" />
+  </node>
+
+  <!-- Mission Manager Node -->
+  <node if="$(arg enable_mission_manager)" name="mission_manager" pkg="uav_control" type="mission_manager.py" output="screen">
+    <!-- Topics -->
+    <remap from="/uav/state" to="/uav/state" />
+    <remap from="/vision/target_state" to="/vision/target_state" />
+    <remap from="/vision/status" to="/vision/status" />
+    <remap from="/mission/status" to="/mission/status" />
+    <remap from="/mission/log" to="/mission/log" />
+  </node>
+
+</launch>
+

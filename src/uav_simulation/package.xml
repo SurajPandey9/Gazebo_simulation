@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_simulation</name>
+  <version>1.0.0</version>
+  <description>Gazebo simulation environment for UAV target detection</description>
+
+  <maintainer email="user@example.com">UAV Team</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_plugins</depend>
+  <depend>hector_quadrotor_gazebo</depend>
+  <depend>hector_quadrotor_description</depend>
+  <depend>hector_quadrotor_teleop</depend>
+  <depend>uav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_media_path="${prefix}/worlds"/>
+  </export>
+</package>
+

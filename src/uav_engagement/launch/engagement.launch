@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Engagement system launch file -->
+  <!-- Starts engagement controller -->
+
+  <!-- Parameters -->
+  <arg name="engagement_altitude" default="2.0" />
+  <arg name="engagement_radius" default="1.0" />
+  <arg name="min_lock_time" default="2.0" />
+  <arg name="centering_tolerance" default="50" />
+
+  <!-- Engagement Controller Node -->
+  <node name="engagement_controller" pkg="uav_engagement" type="engagement_controller.py" output="screen">
+    <param name="engagement_altitude" value="$(arg engagement_altitude)" />
+    <param name="engagement_radius" value="$(arg engagement_radius)" />
+    <param name="min_lock_time" value="$(arg min_lock_time)" />
+    <param name="centering_tolerance" value="$(arg centering_tolerance)" />
+    
+    <!-- Topics -->
+    <remap from="/uav/state" to="/uav/state" />
+    <remap from="/vision/target_state" to="/vision/target_state" />
+    <remap from="/engagement/status" to="/engagement/status" />
+    <remap from="/engagement/ready" to="/engagement/ready" />
+    <remap from="/engagement/fire" to="/engagement/fire" />
+  </node>
+
+</launch>
+

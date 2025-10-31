@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Vision system launch file -->
+  <!-- Starts object detection, tracking, and vision manager -->
+
+  <!-- Parameters -->
+  <arg name="model_size" default="yolov5s" />
+  <arg name="confidence_threshold" default="0.5" />
+  <arg name="use_gpu" default="true" />
+  <arg name="debug" default="true" />
+
+  <!-- Load vision parameters -->
+  <rosparam command="load" file="$(find uav_simulation)/../../config/vision_params.yaml" />
+
+  <!-- Object Detector Node -->
+  <node name="object_detector" pkg="uav_vision" type="object_detector.py" output="screen">
+    <param name="model_size" value="$(arg model_size)" />
+    <param name="confidence_threshold" value="$(arg confidence_threshold)" />
+    <param name="use_gpu" value="$(arg use_gpu)" />
+    <param name="debug" value="$(arg debug)" />
+    
+    <!-- Topics -->
+    <remap from="/camera/image_raw" to="/uav/camera/image_raw" />
+    <remap from="/detections" to="/vision/detections" />
+    <remap from="/debug_image" to="/vision/debug_image" />
+  </node>
+
+  <!-- Object Tracker Node -->
+  <node name="object_tracker" pkg="uav_vision" type="object_tracker.py" output="screen">
+    <param name="max_iou_distance" value="0.7" />
+    <param name="max_feature_distance" value="0.3" />
+    <param name="max_age" value="30" />
+    <param name="min_hits" value="3" />
+    
+    <!-- Topics -->
+    <remap from="/detections" to="/vision/detections" />
+    <remap from="/camera/image_raw" to="/uav/camera/image_raw" />
+    <remap from="/target_state" to="/vision/target_state" />
+    <remap from="/tracked_image" to="/vision/tracked_image" />
+  </node>
+
+  <!-- Vision Manager Node -->
+  <node name="vision_manager" pkg="uav_vision" type="vision_manager.py" output="screen">
+    <!-- Topics -->
+    <remap from="/detections" to="/vision/detections" />
+    <remap from="/target_state" to="/vision/target_state" />
+    <remap from="/status" to="/vision/status" />
+  </node>
+
+  <!-- Image view for debugging (optional) -->
+  <node if="$(arg debug)" name="image_view_tracked" pkg="image_view" type="image_view">
+    <remap from="image" to="/vision/tracked_image" />
+  </node>
+
+</launch>
+
