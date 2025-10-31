@@ -291,5 +291,5 @@ This project is licensed under the MIT License - see LICENSE file for details.
 
 ## Contact
 
-For questions or issues, please open an issue on GitHub or contact [your-email].
+For questions or issues, please open an issue on GitHub or contact 223236@kit.ac.in.
 
